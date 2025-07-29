@@ -94,20 +94,20 @@ fun getCurrentPeriodIndex(): Int? {
     LocalTime.of(15, 40)  // Period 7 end
   )
   
-  android.util.Log.d("PeriodHighlight", "Current time: $now")
+  //android.util.Log.d("PeriodHighlight", "Current time: $now")
   
   for (i in periodTimes.indices) {
     val startTime = periodTimes[i]
     val endTime = periodEndTimes[i]
-    android.util.Log.d("PeriodHighlight", "Checking period $i: $startTime - $endTime")
+    //android.util.Log.d("PeriodHighlight", "Checking period $i: $startTime - $endTime")
     
     if (now >= startTime && now < endTime) {
-      android.util.Log.d("PeriodHighlight", "Found active period: $i")
+      //android.util.Log.d("PeriodHighlight", "Found active period: $i")
       return i
     }
   }
   
-  android.util.Log.d("PeriodHighlight", "No active period found")
+  //android.util.Log.d("PeriodHighlight", "No active period found")
   return null
 }
 
@@ -133,19 +133,19 @@ fun testPeriodDetection(testTime: LocalTime): Int? {
     LocalTime.of(15, 40)  // Period 7 end
   )
   
-  android.util.Log.d("PeriodTest", "Testing time: $testTime")
+  //android.util.Log.d("PeriodTest", "Testing time: $testTime")
   
   for (i in periodTimes.indices) {
     val startTime = periodTimes[i]
     val endTime = periodEndTimes[i]
     
     if (testTime >= startTime && testTime < endTime) {
-      android.util.Log.d("PeriodTest", "Test found active period: $i")
+      //android.util.Log.d("PeriodTest", "Test found active period: $i")
       return i
     }
   }
   
-  android.util.Log.d("PeriodTest", "Test found no active period")
+  //android.util.Log.d("PeriodTest", "Test found no active period")
   return null
 }
 

@@ -87,9 +87,9 @@ class TimetableAppWidget : GlanceAppWidget() {
           val times by timetable.collectAsState()
           
           // Debug: Log current time and period detection
-          android.util.Log.d("WidgetDebug", "Widget rendering at ${java.time.LocalTime.now()}")
+          //android.util.Log.d("WidgetDebug", "Widget rendering at ${java.time.LocalTime.now()}")
           val currentPeriod = town.amrita.timetable.models.getCurrentPeriodIndex()
-          android.util.Log.d("WidgetDebug", "Current period index: $currentPeriod")
+          //android.util.Log.d("WidgetDebug", "Current period index: $currentPeriod")
 
         val isLockedNow =
           with(data.lockedUntil) {

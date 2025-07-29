@@ -17,7 +17,7 @@ import android.util.Log
 class TimetableAlarmReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action == "town.amrita.timetable.PERIOD_UPDATE") {
-      Log.d("TimetableAlarm", "Period update triggered")
+      //android.util.Log.d("TimetableAlarm", "Period update triggered")
       // Update the widget when a period starts
       kotlinx.coroutines.runBlocking {
         context.updateDay(TODAY)
@@ -48,7 +48,7 @@ object TimetableAlarmScheduler {
     val now = LocalDateTime.now()
     val today = now.toLocalDate()
     
-    Log.d("TimetableAlarm", "Scheduling alarms for ${today} at ${now}")
+    //android.util.Log.d("TimetableAlarm", "Scheduling alarms for ${today} at ${now}")
     
     // Schedule alarms for each period time today
     PERIOD_TIMES.forEachIndexed { index, time ->
@@ -58,9 +58,9 @@ object TimetableAlarmScheduler {
       val timeUntilPeriod = java.time.Duration.between(now, periodStart)
       if (periodStart.isAfter(now) || timeUntilPeriod.toMinutes() >= -5) {
         scheduleAlarm(context, alarmManager, periodStart, index)
-        Log.d("TimetableAlarm", "Scheduled alarm for period ${index + 1} at ${periodStart}")
+        //android.util.Log.d("TimetableAlarm", "Scheduled alarm for period ${index + 1} at ${periodStart}")
       } else {
-        Log.d("TimetableAlarm", "Skipped period ${index + 1} at ${periodStart} (already passed)")
+        //android.util.Log.d("TimetableAlarm", "Skipped period ${index + 1} at ${periodStart} (already passed)")
       }
     }
     
@@ -69,7 +69,7 @@ object TimetableAlarmScheduler {
     PERIOD_TIMES.forEachIndexed { index, time ->
       val periodStart = LocalDateTime.of(tomorrow, time)
       scheduleAlarm(context, alarmManager, periodStart, index)
-      Log.d("TimetableAlarm", "Scheduled alarm for tomorrow period ${index + 1} at ${periodStart}")
+      //android.util.Log.d("TimetableAlarm", "Scheduled alarm for tomorrow period ${index + 1} at ${periodStart}")
     }
   }
   
@@ -90,7 +90,7 @@ object TimetableAlarmScheduler {
     val currentTime = System.currentTimeMillis()
     val delayMs = triggerTime - currentTime
     
-    Log.d("TimetableAlarm", "Setting alarm for period ${periodIndex + 1}: trigger at ${periodStart} (in ${delayMs}ms)")
+    //android.util.Log.d("TimetableAlarm", "Setting alarm for period ${periodIndex + 1}: trigger at ${periodStart} (in ${delayMs}ms)")
     
     // Try multiple alarm types for better reliability
     try {
@@ -98,16 +98,16 @@ object TimetableAlarmScheduler {
         // For Android 12+, use setAlarmClock for better reliability
         val info = android.app.AlarmManager.AlarmClockInfo(triggerTime, pendingIntent)
         alarmManager.setAlarmClock(info, pendingIntent)
-        Log.d("TimetableAlarm", "Used setAlarmClock for period ${periodIndex + 1}")
+        //android.util.Log.d("TimetableAlarm", "Used setAlarmClock for period ${periodIndex + 1}")
       } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-        Log.d("TimetableAlarm", "Used setExactAndAllowWhileIdle for period ${periodIndex + 1}")
+        //android.util.Log.d("TimetableAlarm", "Used setExactAndAllowWhileIdle for period ${periodIndex + 1}")
       } else {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-        Log.d("TimetableAlarm", "Used setExact for period ${periodIndex + 1}")
+        //android.util.Log.d("TimetableAlarm", "Used setExact for period ${periodIndex + 1}")
       }
       
-      Log.d("TimetableAlarm", "Alarm set successfully for period ${periodIndex + 1}")
+      //android.util.Log.d("TimetableAlarm", "Alarm set successfully for period ${periodIndex + 1}")
     } catch (e: Exception) {
       Log.e("TimetableAlarm", "Failed to set alarm for period ${periodIndex + 1}: ${e.message}")
     }
