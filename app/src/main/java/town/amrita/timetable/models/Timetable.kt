@@ -3,6 +3,8 @@ package town.amrita.timetable.models
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
+import java.time.LocalTime
+import android.util.Log
 
 @Serializable
 data class Timetable(
@@ -63,11 +65,89 @@ data class TimetableDisplayEntry(
   val slot: String,
   val start: Int,
   val end: Int,
-  val lab: Boolean
+  val lab: Boolean,
+  val isActive: Boolean = false
 )
 
 val FREE_SUBJECT = Subject("Free", "", "")
 val UNKNOWN_SUBJECT = Subject("⚠️ Unknown", "", "")
+
+fun getCurrentPeriodIndex(): Int? {
+  val now = LocalTime.now()
+  val periodTimes = listOf(
+    LocalTime.of(8, 10),  // Period 1 start
+    LocalTime.of(9, 0),   // Period 2 start
+    LocalTime.of(9, 50),  // Period 3 start
+    LocalTime.of(11, 0),  // Period 4 start (after break)
+    LocalTime.of(11, 50), // Period 5 start
+    LocalTime.of(14, 0),  // Period 6 start (after lunch)
+    LocalTime.of(14, 50)  // Period 7 start
+  )
+  
+  val periodEndTimes = listOf(
+    LocalTime.of(9, 0),   // Period 1 end
+    LocalTime.of(9, 50),  // Period 2 end
+    LocalTime.of(10, 40), // Period 3 end
+    LocalTime.of(11, 50), // Period 4 end
+    LocalTime.of(12, 40), // Period 5 end
+    LocalTime.of(14, 50), // Period 6 end
+    LocalTime.of(15, 40)  // Period 7 end
+  )
+  
+  android.util.Log.d("PeriodHighlight", "Current time: $now")
+  
+  for (i in periodTimes.indices) {
+    val startTime = periodTimes[i]
+    val endTime = periodEndTimes[i]
+    android.util.Log.d("PeriodHighlight", "Checking period $i: $startTime - $endTime")
+    
+    if (now >= startTime && now < endTime) {
+      android.util.Log.d("PeriodHighlight", "Found active period: $i")
+      return i
+    }
+  }
+  
+  android.util.Log.d("PeriodHighlight", "No active period found")
+  return null
+}
+
+// Test function to verify period detection logic
+fun testPeriodDetection(testTime: LocalTime): Int? {
+  val periodTimes = listOf(
+    LocalTime.of(8, 10),  // Period 1 start
+    LocalTime.of(9, 0),   // Period 2 start
+    LocalTime.of(9, 50),  // Period 3 start
+    LocalTime.of(11, 0),  // Period 4 start (after break)
+    LocalTime.of(11, 50), // Period 5 start
+    LocalTime.of(14, 0),  // Period 6 start (after lunch)
+    LocalTime.of(14, 50)  // Period 7 start
+  )
+  
+  val periodEndTimes = listOf(
+    LocalTime.of(9, 0),   // Period 1 end
+    LocalTime.of(9, 50),  // Period 2 end
+    LocalTime.of(10, 40), // Period 3 end
+    LocalTime.of(11, 50), // Period 4 end
+    LocalTime.of(12, 40), // Period 5 end
+    LocalTime.of(14, 50), // Period 6 end
+    LocalTime.of(15, 40)  // Period 7 end
+  )
+  
+  android.util.Log.d("PeriodTest", "Testing time: $testTime")
+  
+  for (i in periodTimes.indices) {
+    val startTime = periodTimes[i]
+    val endTime = periodEndTimes[i]
+    
+    if (testTime >= startTime && testTime < endTime) {
+      android.util.Log.d("PeriodTest", "Test found active period: $i")
+      return i
+    }
+  }
+  
+  android.util.Log.d("PeriodTest", "Test found no active period")
+  return null
+}
 
 fun buildTimetableDisplay(day: String, timetable: Timetable, showFreePeriods: Boolean = true): List<TimetableDisplayEntry> {
   if (!timetable.schedule.containsKey(day))
@@ -102,7 +182,10 @@ fun buildTimetableDisplay(day: String, timetable: Timetable, showFreePeriods: Bo
       }
     else timetable.slots[i]
 
-    if(!(showFreePeriods && subject == FREE_SUBJECT))
+    if(!(showFreePeriods && subject == FREE_SUBJECT)) {
+      val currentPeriodIndex = getCurrentPeriodIndex()
+      val isActive = currentPeriodIndex != null && i <= currentPeriodIndex && currentPeriodIndex <= i + offset - 1
+      
       times.add(
         TimetableDisplayEntry(
           subject.name,
@@ -110,9 +193,11 @@ fun buildTimetableDisplay(day: String, timetable: Timetable, showFreePeriods: Bo
           slot,
           i,
           i + offset - 1,
-          isLab
+          isLab,
+          isActive
         )
       )
+    }
 
     i += offset
   }

@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import town.amrita.timetable.widget.TimetableAppWidget
+import town.amrita.timetable.widget.TimetableAlarmScheduler
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -52,6 +53,8 @@ suspend fun Context.updateDay(day: String) {
   }
 
   TimetableAppWidget().updateAll(this)
+  // Reschedule alarms when day changes
+  TimetableAlarmScheduler.schedulePeriodAlarms(this)
 }
 
 suspend fun Context.updateFile(file: String) {
@@ -90,5 +93,10 @@ suspend fun Context.updateShowFreePeriods(showFreePeriods: Boolean) {
     it.copy(showFreePeriods = showFreePeriods)
   }
 
+  TimetableAppWidget().updateAll(this)
+}
+
+suspend fun Context.refreshWidget() {
+  // Force refresh the widget to update highlighting
   TimetableAppWidget().updateAll(this)
 }

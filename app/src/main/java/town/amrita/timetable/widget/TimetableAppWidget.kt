@@ -41,10 +41,9 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import town.amrita.timetable.widget.TimetableAlarmScheduler
 import kotlinx.coroutines.coroutineScope
+import android.util.Log
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -79,16 +78,18 @@ class TimetableAppWidget : GlanceAppWidget() {
         buildTimetableDisplay(it.day ?: TODAY, timetable, it.showFreePeriods)
       }.stateIn(this)
 
-      val work = PeriodicWorkRequestBuilder<UpdateWorker>(30, TimeUnit.MINUTES)
-        .build()
+      // Schedule alarms for exact period times instead of periodic work
+      TimetableAlarmScheduler.schedulePeriodAlarms(context)
 
-      WorkManager.getInstance(context)
-        .enqueueUniquePeriodicWork("TIMETABLE_UPDATE_WORKER", ExistingPeriodicWorkPolicy.KEEP, work)
-
-      provideContent {
-        val data by store.data.collectAsState(initial)
-        val day = data.day ?: TODAY
-        val times by timetable.collectAsState()
+              provideContent {
+          val data by store.data.collectAsState(initial)
+          val day = data.day ?: TODAY
+          val times by timetable.collectAsState()
+          
+          // Debug: Log current time and period detection
+          android.util.Log.d("WidgetDebug", "Widget rendering at ${java.time.LocalTime.now()}")
+          val currentPeriod = town.amrita.timetable.models.getCurrentPeriodIndex()
+          android.util.Log.d("WidgetDebug", "Current period index: $currentPeriod")
 
         val isLockedNow =
           with(data.lockedUntil) {
@@ -195,44 +196,51 @@ fun TimetableItem(item: TimetableDisplayEntry) {
   val textStyle = TextStyle(color = GlanceTheme.colors.onSurface)
   val strongTextStyle =
     TextStyle(color = GlanceTheme.colors.onSurface, fontWeight = FontWeight.Medium)
+  val activeTextStyle = TextStyle(color = GlanceTheme.colors.onPrimary, fontWeight = FontWeight.Medium)
 
   val isBeeg = LocalSize.current.width >= BEEG.width
 
   with(item) {
+    val backgroundColor = if (isActive) GlanceTheme.colors.primary else GlanceTheme.colors.widgetBackground
+    val textColor = if (isActive) GlanceTheme.colors.onPrimary else GlanceTheme.colors.onSurface
+    
     Box(
       GlanceModifier
         .fillMaxWidth()
         .padding(horizontal = 14.dp, vertical = 8.dp)
         .appWidgetInnerCornerRadius(12.dp)
-        .background(GlanceTheme.colors.widgetBackground)
+        .background(backgroundColor)
     ) {
-      Column {
-        Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-          Text(if (isBeeg) name else shortName, style = strongTextStyle)
-          Spacer(GlanceModifier.padding(start = 4.dp))
-          if (lab) {
-            Image(
-              provider = ImageProvider(R.drawable.science_24px),
-              contentDescription = "Lab",
-              colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
-            )
-          }
-        }
-        Row {
-          Text(
-            "Period ${if (start == end) start + 1 else "${start + 1} → ${end + 1}"}",
-            style = textStyle
-          )
-          if (isBeeg) {
+              Column {
+          Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
             Text(
-              "•",
-              style = textStyle,
-              modifier = GlanceModifier.padding(horizontal = 6.dp)
+              if (isBeeg) name else shortName, 
+              style = if (isActive) activeTextStyle else strongTextStyle
             )
-            Text(slot, style = textStyle)
+            Spacer(GlanceModifier.padding(start = 4.dp))
+            if (lab) {
+              Image(
+                provider = ImageProvider(R.drawable.science_24px),
+                contentDescription = "Lab",
+                colorFilter = ColorFilter.tint(if (isActive) GlanceTheme.colors.onPrimary else GlanceTheme.colors.primary)
+              )
+            }
+          }
+          Row {
+            Text(
+              "Period ${if (start == end) start + 1 else "${start + 1} → ${end + 1}"}",
+              style = TextStyle(color = textColor)
+            )
+            if (isBeeg) {
+              Text(
+                "•",
+                style = TextStyle(color = textColor),
+                modifier = GlanceModifier.padding(horizontal = 6.dp)
+              )
+              Text(slot, style = TextStyle(color = textColor))
+            }
           }
         }
-      }
     }
   }
 }
